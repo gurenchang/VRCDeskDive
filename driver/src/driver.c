@@ -172,7 +172,9 @@ static void ApplyLock(DriverPose *p, const SharedState *s)
     }
 
     double pitch = s->pitchDeg * 3.14159265358979 / 180.0;
-    Quat targetRot = QMul(QAxisAngle(0, 1, 0, g_targetYaw), QAxisAngle(1, 0, 0, pitch));
+    /* Y 軸まわりの正の回転は左向きなので、右が正の yawDeg は引く */
+    double yaw = g_targetYaw - s->yawDeg * 3.14159265358979 / 180.0;
+    Quat targetRot = QMul(QAxisAngle(0, 1, 0, yaw), QAxisAngle(1, 0, 0, pitch));
     Vec3 targetPos = s->lockPosition ? g_targetPos : posW;
 
     Quat r = QMul(targetRot, QConj(rotW));

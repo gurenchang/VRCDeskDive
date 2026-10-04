@@ -17,8 +17,9 @@
             <StackPanel x:Name="Hint" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
                 <TextBlock x:Name="HintTitle" Text="ここで右クリック＋ドラッグ" FontSize="17" FontWeight="Bold"
                            HorizontalAlignment="Center" Foreground="{StaticResource TextBrush}"/>
-                <TextBlock x:Name="HintSub" Text="右クリック＋ドラッグでHMD視点を回転 / ホイール押しで水平に戻す" Margin="0,4,0,0"
-                           HorizontalAlignment="Center" Foreground="{StaticResource SubTextBrush}"/>
+                <TextBlock x:Name="HintSub" Text="右クリック＋ドラッグでHMD視点を回転 / ホイール押しで水平に戻す" Margin="12,4,12,0"
+                           HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"
+                           Foreground="{StaticResource SubTextBrush}"/>
             </StackPanel>
 
             <!-- ドラッグ中のスティック表示 -->

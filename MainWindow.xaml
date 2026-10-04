@@ -8,32 +8,49 @@
         FontFamily="Yu Gothic UI, Segoe UI" FontSize="13">
     <!-- 画面が小さいときはスクロールできるようにする（MaxHeight はコードで作業領域に合わせる） -->
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <Grid Margin="22,18,22,22">
+        <Grid x:Name="RootGrid" Margin="22,18,22,22">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="400"/>
-                <ColumnDefinition Width="24"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition x:Name="LeftColumn" Width="400"/>
+                <ColumnDefinition x:Name="SpacerColumn" Width="24"/>
+                <ColumnDefinition x:Name="RightColumn" Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- ===== 左: 切り替えと視点操作 ===== -->
+            <!-- ===== 左: 切り替えと視点操作（縮小モードではここだけ表示） ===== -->
             <StackPanel Grid.Column="0">
-                <TextBlock Text="VRCDeskDive" FontSize="22" FontWeight="Bold"/>
-                <TextBlock Text="VRChatを落とさずに、VR操作とデスクトップ操作を切り替え"
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                        <ToggleButton x:Name="TopmostButton" Style="{StaticResource IconToggle}" Content="&#xE718;"
+                                      ToolTip="最前面に固定" Click="TopmostButton_Click"/>
+                        <ToggleButton x:Name="CompactButton" Style="{StaticResource IconToggle}" Content="&#xE73F;"
+                                      ToolTip="縮小表示" Margin="4,0,0,0" Click="CompactButton_Click"/>
+                    </StackPanel>
+                    <TextBlock x:Name="TitleText" Text="VRCDeskDive" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
+                </DockPanel>
+                <TextBlock x:Name="Subtitle" Text="VRChatを落とさずに、VR操作とデスクトップ操作を切り替え"
                            Foreground="{StaticResource SubTextBrush}" Margin="0,2,0,14"/>
 
                 <Border x:Name="ModeCard" Background="{StaticResource CardBrush}" CornerRadius="10" Padding="18,14"
                         BorderThickness="2" BorderBrush="{StaticResource VrBrush}">
                     <StackPanel>
-                        <TextBlock Text="現在のモード" Foreground="{StaticResource SubTextBrush}"/>
+                        <TextBlock x:Name="ModeLabel" Text="現在のモード" Foreground="{StaticResource SubTextBrush}"/>
                         <TextBlock x:Name="ModeText" Text="VR操作" FontSize="26" FontWeight="Bold" Margin="0,2,0,2"/>
-                        <TextBlock x:Name="ModeHint" Foreground="{StaticResource SubTextBrush}" Margin="0,0,0,12"/>
+                        <TextBlock x:Name="ModeHint" Foreground="{StaticResource SubTextBrush}" Margin="0,0,0,12" TextWrapping="Wrap"/>
                         <Button x:Name="ToggleButton" Style="{StaticResource PrimaryButton}" Click="ToggleButton_Click"/>
                     </StackPanel>
                 </Border>
 
                 <local:LookPad x:Name="LookPad" Margin="0,12,0,0"/>
 
-                <Grid Margin="0,12,0,0">
+                <!-- 縮小モード用の簡易状態表示 -->
+                <StackPanel x:Name="CompactStatus" Orientation="Horizontal" Margin="2,10,0,0" Visibility="Collapsed">
+                    <Ellipse x:Name="CompactVrcDot" Width="8" Height="8" Fill="Gray" Margin="0,0,5,0"/>
+                    <TextBlock Text="VRChat" Foreground="{StaticResource SubTextBrush}" Margin="0,0,14,0"/>
+                    <Ellipse x:Name="CompactDriverDot" Width="8" Height="8" Fill="Gray" Margin="0,0,5,0"/>
+                    <TextBlock Text="ドライバー" Foreground="{StaticResource SubTextBrush}" Margin="0,0,14,0"/>
+                    <TextBlock x:Name="CompactHotkeyText" Foreground="{StaticResource SubTextBrush}"/>
+                </StackPanel>
+
+                <Grid x:Name="StatusGrid" Margin="0,12,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
@@ -86,7 +103,7 @@
             </StackPanel>
 
             <!-- ===== 右: 設定と操作方法 ===== -->
-            <StackPanel Grid.Column="2">
+            <StackPanel x:Name="RightPanel" Grid.Column="2">
                 <TextBlock Text="設定" Style="{StaticResource SectionHeader}" Margin="0,4,0,8"/>
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -116,9 +133,19 @@
                 </Grid>
                 <CheckBox x:Name="InvertPitchCheck" Content="上下の視点を反転する" Margin="0,8,0,4"
                           Checked="InvertPitchCheck_Changed" Unchecked="InvertPitchCheck_Changed"/>
-                <CheckBox x:Name="LockPositionCheck" Content="切り替えた時の視点の位置を保つ（HMDを机に置いても高さが変わらない）"
+                <CheckBox x:Name="LockPositionCheck" Content="切り替えた時の視点の位置を保つ（机に置いても高さが変わらない）"
                           Checked="LockPositionCheck_Changed" Unchecked="LockPositionCheck_Changed"/>
-                <CheckBox x:Name="FocusOnlyCheck" Content="VRChatが前面にあるときだけ操作する（推奨）"
+                <CheckBox x:Name="DriverYawCheck" Content="左右もドライバーで回す（デスクトップ版のような視点操作）"
+                          ToolTip="オフにすると、左右はVRChatの旋回（OSC）で回します。ドライバー未接続のときも旋回になります"
+                          Checked="DriverYawCheck_Changed" Unchecked="DriverYawCheck_Changed"/>
+                <StackPanel Orientation="Horizontal">
+                    <CheckBox x:Name="ClickLookCheck" Content="VRChatを左クリックでマウスルック　解除キー"
+                              VerticalAlignment="Center"
+                              Checked="ClickLookCheck_Changed" Unchecked="ClickLookCheck_Changed"/>
+                    <ComboBox x:Name="ReleaseKeyCombo" Width="70" Margin="6,0,0,0" VerticalAlignment="Center"
+                              ToolTip="マウスルックを解除するキー（解除したあとも、そのキーはVRChatにそのまま届きます）"
+                              SelectionChanged="ReleaseKeyCombo_SelectionChanged"/>
+                </StackPanel>                <CheckBox x:Name="FocusOnlyCheck" Content="VRChatかこのウィンドウが前面のときだけ操作する（推奨）"
                           Checked="FocusOnlyCheck_Changed" Unchecked="FocusOnlyCheck_Changed"/>
                 <CheckBox x:Name="SoundCheck" Content="切り替え時に音を鳴らす"
                           Checked="SoundCheck_Changed" Unchecked="SoundCheck_Changed"/>
@@ -133,8 +160,12 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/>
+                        <RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/>
                     </Grid.RowDefinitions>
+                    <Border Grid.Row="4" Style="{StaticResource KeyCap}"><TextBlock Text="左クリック"/></Border>
+                    <TextBlock Grid.Row="4" Grid.Column="1" Text="マウスルック" VerticalAlignment="Center"/>
+                    <Border Grid.Row="4" Grid.Column="2" Style="{StaticResource KeyCap}"><TextBlock x:Name="ReleaseKeyCap" Text="Alt"/></Border>
+                    <TextBlock Grid.Row="4" Grid.Column="3" Text="マウスルック解除" VerticalAlignment="Center"/>
                     <Border Grid.Row="0" Style="{StaticResource KeyCap}"><TextBlock Text="W A S D"/></Border>
                     <TextBlock Grid.Row="0" Grid.Column="1" Text="移動" VerticalAlignment="Center"/>
                     <Border Grid.Row="1" Style="{StaticResource KeyCap}"><TextBlock Text="右ドラッグ"/></Border>

@@ -11,14 +11,31 @@ public sealed class VrcWatcher : IDisposable
     private const int ScanIntervalMs = 2000;
 
     private readonly Timer _timer;
-    private int[] _pids = [];
-    private long _lastScan = long.MinValue;
+    private volatile int[] _pids = [];
+    // 0 なら初回の Tick ですぐに探す（以前は long.MinValue との引き算があふれて一度も探していなかった）
+    private long _nextScan;
     private int _ticking;
     private volatile bool _isRunning;
     private volatile bool _isForeground;
 
     public bool IsRunning => _isRunning;
+
+    /// <summary>直近の監視（200ms 間隔）での前面判定。UI の表示用。</summary>
     public bool IsForeground => _isForeground;
+
+    /// <summary>今この瞬間に VRChat が前面か（入力フックなど、遅れが許されない判定用）。</summary>
+    public bool IsForegroundNow => IsVrcWindow(Native.GetForegroundWindow());
+
+    /// <summary>診断ログ用: 把握している VRChat のプロセス ID。</summary>
+    public string DescribePids() => _pids.Length == 0 ? "none" : string.Join(",", _pids);
+
+    /// <summary>ウィンドウが VRChat のものか（プロセス一覧は 2 秒ごとに更新したものを使う）。</summary>
+    public bool IsVrcWindow(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero) return false;
+        Native.GetWindowThreadProcessId(hwnd, out var pid);
+        return Array.IndexOf(_pids, (int)pid) >= 0;
+    }
 
     /// <summary>状態が変わったとき（タイマースレッドから）通知される。</summary>
     public event Action? Changed;
@@ -34,9 +51,9 @@ public sealed class VrcWatcher : IDisposable
         try
         {
             var now = Environment.TickCount64;
-            if (now - _lastScan >= ScanIntervalMs)
+            if (now >= _nextScan)
             {
-                _lastScan = now;
+                _nextScan = now + ScanIntervalMs;
                 var procs = Process.GetProcessesByName("VRChat");
                 _pids = procs.Select(p => p.Id).ToArray();
                 foreach (var p in procs) p.Dispose();

@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.IO.MemoryMappedFiles;
 
 namespace VRCDeskDive.Core;
@@ -10,6 +11,8 @@ public enum DriverStatus
     SteamVrNotRunning,
     /// <summary>SteamVR は起動しているがドライバーが読み込まれていない（未登録・再起動待ち）</summary>
     NotLoaded,
+    /// <summary>古いドライバーが読み込まれている（SteamVR の再起動で更新される）</summary>
+    VersionMismatch,
     /// <summary>ドライバーは動いているが HMD の姿勢をフックできなかった</summary>
     HookFailed,
     /// <summary>ドライバーは動いているが HMD の姿勢が届いていない</summary>
@@ -26,8 +29,8 @@ public sealed class DriverLink : IDisposable
 {
     private const string MapName = "Local\\VRCDeskDive.Driver";
     private const uint Magic = 0x44444356;
-    private const uint Version = 1;
-    private const int Size = 48;
+    private const uint Version = 2;
+    private const int Size = 56;
     private const int StaleMs = 2000;
 
     // shared_state.h のオフセット
@@ -40,12 +43,14 @@ public sealed class DriverLink : IDisposable
     private const int OffEnabled = 32;
     private const int OffPitch = 36;
     private const int OffLockPosition = 40;
+    private const int OffYaw = 48;
 
     private MemoryMappedFile? _map;
     private MemoryMappedViewAccessor? _view;
     private long _nextOpenAttempt;
     private long _nextSteamVrCheck;
     private bool _steamVrRunning;
+    private bool _versionMismatch;
     private uint _lastPoseCount;
     private long _lastPoseChange;
 
@@ -54,7 +59,11 @@ public sealed class DriverLink : IDisposable
     /// <summary>状態が変わったとき（OSC スレッドから）通知される。</summary>
     public event Action? StatusChanged;
 
-    public void Update(bool enabled, float pitchDeg, bool lockPosition)
+    public bool IsConnected => Status == DriverStatus.Connected;
+
+    /// <param name="yawDeg">切り替え時の向きからの左右角（右が正）</param>
+    /// <param name="pitchDeg">水平からの上下角（上が正）</param>
+    public void Update(bool enabled, float yawDeg, float pitchDeg, bool lockPosition)
     {
         var now = Environment.TickCount64;
         if (now >= _nextSteamVrCheck)
@@ -72,7 +81,7 @@ public sealed class DriverLink : IDisposable
         }
         if (!EnsureOpen(now))
         {
-            SetStatus(DriverStatus.NotLoaded);
+            SetStatus(_versionMismatch ? DriverStatus.VersionMismatch : DriverStatus.NotLoaded);
             return;
         }
 
@@ -82,6 +91,7 @@ public sealed class DriverLink : IDisposable
         view.Write(OffEnabled, enabled ? 1 : 0);
         view.Write(OffPitch, pitchDeg);
         view.Write(OffLockPosition, lockPosition ? 1 : 0);
+        view.Write(OffYaw, yawDeg);
 
         var driverHeartbeat = view.ReadInt64(OffDriverHeartbeat);
         var poseCount = view.ReadUInt32(OffHmdPoseCount);
@@ -103,11 +113,22 @@ public sealed class DriverLink : IDisposable
         if (now < _nextOpenAttempt) return false;
         _nextOpenAttempt = now + 2000;
 
+        _versionMismatch = false;
         try
         {
             _map = MemoryMappedFile.OpenExisting(MapName, MemoryMappedFileRights.ReadWrite);
+            // 古いドライバーの共有メモリは小さいので、まず先頭だけ見てバージョンを確かめる
+            using (var header = _map.CreateViewAccessor(0, 8))
+            {
+                if (header.ReadUInt32(OffMagic) != Magic) throw new InvalidDataException();
+                if (header.ReadUInt32(OffVersion) != Version)
+                {
+                    _versionMismatch = true;
+                    throw new InvalidDataException();
+                }
+            }
             _view = _map.CreateViewAccessor(0, Size);
-            if (_view.ReadUInt32(OffMagic) == Magic && _view.ReadUInt32(OffVersion) == Version) return true;
+            return true;
         }
         catch (Exception)
         {

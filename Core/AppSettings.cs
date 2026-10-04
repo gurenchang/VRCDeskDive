@@ -12,6 +12,14 @@ public sealed class AppSettings
     public double PitchSensitivity { get; set; } = 1.0;
     public bool InvertPitch { get; set; }
     public bool LockViewPosition { get; set; } = true;
+    /// <summary>左右もドライバーで回す（マウスの移動量がそのまま角度になる）。false なら VRChat の旋回（OSC）。</summary>
+    public bool UseDriverYaw { get; set; } = true;
+    /// <summary>VRChat を左クリックするとマウスルック（MouseLookReleaseKey で解除）。</summary>
+    public bool ClickToMouseLook { get; set; } = true;
+    /// <summary>マウスルックを解除するキー（"Alt" / "Tab" / "Ctrl"）。Esc は VRChat のメニューに使うので選ばない。</summary>
+    public string MouseLookReleaseKey { get; set; } = "Alt";
+    public bool CompactMode { get; set; }
+    public bool AlwaysOnTop { get; set; }
     public bool OnlyWhenVrcFocused { get; set; } = true;
     public bool PlaySound { get; set; } = true;
     public string OscHost { get; set; } = "127.0.0.1";

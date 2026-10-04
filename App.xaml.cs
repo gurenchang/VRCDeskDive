@@ -30,6 +30,7 @@ public partial class App : Application
         _main = new MainWindow(_controller);
 
         var hwnd = new WindowInteropHelper(_main).EnsureHandle();
+        _controller.Input.OwnWindow = hwnd;
         _hotkey = new HotkeyService(hwnd);
         _hotkey.Pressed += _controller.Toggle;
         _main.AttachHotkey(_hotkey);

@@ -7,9 +7,11 @@
 
 #include <stdint.h>
 
+#ifndef VRCDESKDIVE_SHM_NAME /* テスト用ビルドでは別の名前にして、動いている SteamVR と混ざらないようにする */
 #define VRCDESKDIVE_SHM_NAME L"Local\\VRCDeskDive.Driver"
+#endif
 #define VRCDESKDIVE_MAGIC 0x44444356u /* 'VCDD' */
-#define VRCDESKDIVE_VERSION 1u
+#define VRCDESKDIVE_VERSION 2u
 
 /* アプリのハートビートがこれより古ければ、ドライバーは姿勢の変更をやめる */
 #define VRCDESKDIVE_APP_TIMEOUT_MS 1500
@@ -30,6 +32,8 @@ typedef struct SharedState
     volatile float pitchDeg;            /* 36: 水平からの上下角（上が正） */
     volatile int32_t lockPosition;      /* 40: 1 = 切り替え時の頭の位置に固定 */
     volatile uint32_t recaptureSeq;     /* 44: 値が変わったら基準を取り直す */
-} SharedState;                          /* 48 bytes */
+    volatile float yawDeg;              /* 48: 切り替え時の向きからの左右角（右が正） */
+    volatile uint32_t reserved;         /* 52 */
+} SharedState;                          /* 56 bytes */
 
 #endif
