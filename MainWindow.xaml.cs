@@ -22,6 +22,8 @@ public partial class MainWindow : Window
     {
         _controller = controller;
         InitializeComponent();
+        // 画面に収まらないときは ScrollViewer でスクロールさせる
+        MaxHeight = SystemParameters.WorkArea.Height;
 
         var s = controller.Settings;
         SensitivitySlider.Value = s.MouseSensitivity;
