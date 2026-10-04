@@ -1,0 +1,32 @@
+<UserControl x:Class="VRCDeskDive.LookPad"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Height="150" Cursor="SizeAll">
+    <Border x:Name="Frame" Background="#15161A" CornerRadius="10" BorderThickness="1"
+            BorderBrush="{StaticResource BorderBrush}" ClipToBounds="True">
+        <Grid>
+            <!-- マウスのアイコン（右上） -->
+            <Canvas Width="18" Height="26" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,12,14,0"
+                    Opacity="0.45">
+                <Rectangle Width="18" Height="26" RadiusX="9" RadiusY="9"
+                           Stroke="{StaticResource SubTextBrush}" StrokeThickness="1.5"/>
+                <Line X1="9" Y1="4" X2="9" Y2="10" Stroke="{StaticResource SubTextBrush}" StrokeThickness="1.5"/>
+                <Path Data="M 9,0 A 9,9 0 0 1 18,9 L 18,11 L 9,11 Z" Fill="{StaticResource SubTextBrush}"/>
+            </Canvas>
+
+            <StackPanel x:Name="Hint" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+                <TextBlock x:Name="HintTitle" Text="ここで右クリック＋ドラッグ" FontSize="17" FontWeight="Bold"
+                           HorizontalAlignment="Center" Foreground="{StaticResource TextBrush}"/>
+                <TextBlock x:Name="HintSub" Text="右クリック＋ドラッグでHMD視点を回転" Margin="0,4,0,0"
+                           HorizontalAlignment="Center" Foreground="{StaticResource SubTextBrush}"/>
+            </StackPanel>
+
+            <!-- ドラッグ中のスティック表示 -->
+            <Canvas x:Name="StickLayer" IsHitTestVisible="False" Visibility="Collapsed">
+                <Ellipse x:Name="Ring" Stroke="#40FFFFFF" StrokeThickness="1.5" StrokeDashArray="3 3"/>
+                <Line x:Name="Arm" Stroke="{StaticResource DesktopBrush}" StrokeThickness="2" Opacity="0.6"/>
+                <Ellipse x:Name="Knob" Width="26" Height="26" Fill="{StaticResource DesktopBrush}"/>
+            </Canvas>
+        </Grid>
+    </Border>
+</UserControl>

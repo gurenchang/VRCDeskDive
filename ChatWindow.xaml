@@ -1,0 +1,23 @@
+<Window x:Class="VRCDeskDive.ChatWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="VRCDeskDive チャット" Width="540" SizeToContent="Height"
+        WindowStyle="None" ResizeMode="NoResize" Topmost="True" ShowInTaskbar="False"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource BgBrush}" Foreground="{StaticResource TextBrush}"
+        FontFamily="Yu Gothic UI, Segoe UI" FontSize="13">
+    <Border BorderBrush="{StaticResource DesktopBrush}" BorderThickness="2" Padding="16,12">
+        <StackPanel>
+            <DockPanel>
+                <TextBlock x:Name="CountText" DockPanel.Dock="Right" Text="0/144"
+                           Foreground="{StaticResource SubTextBrush}"/>
+                <TextBlock Text="チャットボックスに送信" Foreground="{StaticResource SubTextBrush}"/>
+            </DockPanel>
+            <TextBox x:Name="Input" MaxLength="144" FontSize="17" Padding="6,5" Margin="0,8"
+                     Background="{StaticResource CardBrush}" Foreground="{StaticResource TextBrush}"
+                     BorderBrush="{StaticResource BorderBrush}" CaretBrush="{StaticResource TextBrush}"
+                     KeyDown="Input_KeyDown" TextChanged="Input_TextChanged"/>
+            <TextBlock Text="Enter: 送信　Esc: キャンセル" FontSize="11" Foreground="{StaticResource SubTextBrush}"/>
+        </StackPanel>
+    </Border>
+</Window>
