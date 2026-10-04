@@ -59,3 +59,4 @@ VRChat かこのツールのウィンドウが前面にあるときだけ効き�
 ## サードパーティ
 
 - [OpenVR SDK](https://github.com/ValveSoftware/openvr)（BSD-3-Clause）: `ThirdParty/OpenVR/`
+- [Rajdhani](https://fonts.google.com/specimen/Rajdhani)（SIL Open Font License 1.1）: `Fonts/`

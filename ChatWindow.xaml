@@ -1,23 +1,32 @@
 <Window x:Class="VRCDeskDive.ChatWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="VRCDeskDive チャット" Width="540" SizeToContent="Height"
-        WindowStyle="None" ResizeMode="NoResize" Topmost="True" ShowInTaskbar="False"
+        Title="VRCDeskDive チャット" Width="560" SizeToContent="Height"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ResizeMode="NoResize" Topmost="True" ShowInTaskbar="False"
         WindowStartupLocation="CenterScreen"
-        Background="{StaticResource BgBrush}" Foreground="{StaticResource TextBrush}"
-        FontFamily="Yu Gothic UI, Segoe UI" FontSize="13">
-    <Border BorderBrush="{StaticResource DesktopBrush}" BorderThickness="2" Padding="16,12">
+        FontFamily="{StaticResource UiFont}" FontSize="13" Foreground="{StaticResource TextBrush}"
+        UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
+    <Border x:Name="Frame" CornerRadius="16" Background="{StaticResource WindowBackground}"
+            BorderBrush="{StaticResource DesktopGradient}" BorderThickness="1.5" Padding="20,14,20,16">
         <StackPanel>
-            <DockPanel>
-                <TextBlock x:Name="CountText" DockPanel.Dock="Right" Text="0/144"
+            <DockPanel Margin="0,0,0,10">
+                <TextBlock x:Name="CountText" DockPanel.Dock="Right" Text="0/144" VerticalAlignment="Center"
+                           FontFamily="{StaticResource DisplayFont}" FontWeight="SemiBold" FontSize="14"
                            Foreground="{StaticResource SubTextBrush}"/>
-                <TextBlock Text="チャットボックスに送信" Foreground="{StaticResource SubTextBrush}"/>
+                <TextBlock Style="{StaticResource Caption}" Margin="0" Foreground="#C084FC">
+                    <Run Text="CHATBOX"/><Run Text="  チャットボックスに送信" FontFamily="{StaticResource UiFont}" FontWeight="Normal"
+                                              FontSize="12" Foreground="{StaticResource MutedBrush}"/>
+                </TextBlock>
             </DockPanel>
-            <TextBox x:Name="Input" MaxLength="144" FontSize="17" Padding="6,5" Margin="0,8"
-                     Background="{StaticResource CardBrush}" Foreground="{StaticResource TextBrush}"
-                     BorderBrush="{StaticResource BorderBrush}" CaretBrush="{StaticResource TextBrush}"
+            <TextBox x:Name="Input" Style="{StaticResource ModernTextBox}" MaxLength="144" FontSize="17"
                      KeyDown="Input_KeyDown" TextChanged="Input_TextChanged"/>
-            <TextBlock Text="Enter: 送信　Esc: キャンセル" FontSize="11" Foreground="{StaticResource SubTextBrush}"/>
+            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                <Border Style="{StaticResource KeyCap}" Margin="0,0,6,0"><TextBlock Text="Enter"/></Border>
+                <TextBlock Text="送信" Foreground="{StaticResource SubTextBrush}" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                <Border Style="{StaticResource KeyCap}" Margin="0,0,6,0"><TextBlock Text="Esc"/></Border>
+                <TextBlock Text="キャンセル" Foreground="{StaticResource SubTextBrush}" VerticalAlignment="Center"/>
+            </StackPanel>
         </StackPanel>
     </Border>
 </Window>

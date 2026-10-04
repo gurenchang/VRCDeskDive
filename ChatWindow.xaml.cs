@@ -21,6 +21,9 @@ public partial class ChatWindow : Window
         _osc = osc;
         _returnTo = returnTo;
         InitializeComponent();
+        // メインウィンドウと同じ、角丸＋背景ぼかしの見た目にする
+        SourceInitialized += (_, _) => WindowEffects.EnableBlurBehind(this);
+        SizeChanged += (_, _) => WindowEffects.ApplyRoundedRegion(this, 16);
         Loaded += (_, _) =>
         {
             Native.ForceForeground(new WindowInteropHelper(this).Handle);

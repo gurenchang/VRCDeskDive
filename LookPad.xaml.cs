@@ -40,7 +40,7 @@ public partial class LookPad : UserControl
 
     private void UpdateHint()
     {
-        Frame.Opacity = IsEnabled ? 1 : 0.5;
+        Frame.Opacity = IsEnabled ? 1 : 0.45;
         HintTitle.Text = IsEnabled ? "ここで右クリック＋ドラッグ" : "デスクトップ操作中に使えます";
     }
 

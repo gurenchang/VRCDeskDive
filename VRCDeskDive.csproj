@@ -8,10 +8,20 @@
     <UseWPF>true</UseWPF>
     <AssemblyName>VRCDeskDive</AssemblyName>
     <RootNamespace>VRCDeskDive</RootNamespace>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <!-- zig 本体とドライバーのソースはプロジェクトの項目に含めない -->
     <DefaultItemExcludes>$(DefaultItemExcludes);tools\**;driver\**</DefaultItemExcludes>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 画面で使うフォントとアイコンは exe に埋め込む -->
+    <None Remove="Fonts\**;Assets\**" />
+    <Resource Include="Fonts\*.ttf" />
+    <Resource Include="Assets\app.ico" />
+    <!-- Rajdhani フォント (SIL Open Font License 1.1) -->
+    <None Include="Fonts\OFL.txt" Link="licenses\Rajdhani-OFL.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 
   <ItemGroup>
     <!-- driver\build.ps1 でビルドした SteamVR ドライバーを出力先の driver\vrcdeskdive\ に置く -->
