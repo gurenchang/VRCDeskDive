@@ -15,20 +15,11 @@ internal static class Native
     public const int WM_MOUSEMOVE = 0x0200;
     public const int WM_LBUTTONDOWN = 0x0201;
     public const int WM_LBUTTONUP = 0x0202;
-    public const int WM_RBUTTONDOWN = 0x0204;
-    public const int WM_RBUTTONUP = 0x0205;
     public const int WM_MBUTTONDOWN = 0x0207;
     public const int WM_MBUTTONUP = 0x0208;
-    public const int WM_HOTKEY = 0x0312;
 
     public const uint LLKHF_INJECTED = 0x10;
     public const uint LLMHF_INJECTED = 0x01;
-
-    public const uint MOD_ALT = 0x1;
-    public const uint MOD_CONTROL = 0x2;
-    public const uint MOD_SHIFT = 0x4;
-    public const uint MOD_WIN = 0x8;
-    public const uint MOD_NOREPEAT = 0x4000;
 
     public delegate IntPtr LowLevelProc(int nCode, IntPtr wParam, IntPtr lParam);
 
@@ -111,15 +102,6 @@ internal static class Native
 
     [DllImport("kernel32.dll")]
     public static extern uint GetCurrentThreadId();
-
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
-
-    [DllImport("user32.dll")]
-    public static extern bool UnregisterHotKey(IntPtr hWnd, int id);
-
-    [DllImport("user32.dll")]
-    public static extern bool DestroyIcon(IntPtr hIcon);
 
     public const uint WM_QUIT = 0x0012;
 

@@ -8,7 +8,8 @@ using System.Threading;
 namespace VRCDeskDive.Core;
 
 /// <summary>
-/// デスクトップ操作中のキーボード・マウス入力を VRChat の OSC 入力 (/input/*) に変換する。
+/// デスクトップ操作中のキーボード・マウス入力を、VRChat の OSC 入力 (/input/*) と
+/// SteamVR ドライバーの視点（左右・上下）に変換する。
 /// フックは専用スレッドで登録し、OSC の送信とドライバーの更新は専用スレッドで約 250Hz で行う。
 /// </summary>
 public sealed class InputBridge : IDisposable
@@ -20,8 +21,6 @@ public sealed class InputBridge : IDisposable
     private const int VK_SPACE = 0x20;
     private const int VK_A = 0x41;
     private const int VK_D = 0x44;
-    private const int VK_E = 0x45;
-    private const int VK_Q = 0x51;
     private const int VK_S = 0x53;
     private const int VK_V = 0x56;
     private const int VK_W = 0x57;
@@ -35,17 +34,13 @@ public sealed class InputBridge : IDisposable
     private const int VK_RMENU = 0xA5;
 
     private static readonly HashSet<int> MappedKeys =
-        [VK_W, VK_A, VK_S, VK_D, VK_Q, VK_E, VK_SPACE, VK_LSHIFT, VK_RSHIFT, VK_V, VK_RETURN];
+        [VK_W, VK_A, VK_S, VK_D, VK_SPACE, VK_LSHIFT, VK_RSHIFT, VK_V, VK_RETURN];
 
-    // OSC で旋回するとき: マウスの速さ 1px/秒 あたりの LookHorizontal（感度 1.0 のとき）
-    private const float OscTurnPerPxPerSec = 0.00032f;
-    // OSC 旋回の値のなめらかさ（時定数、秒）
-    private const float OscTurnSmoothing = 0.023f;
-    // ドライバーで回すとき: マウス 1px あたりの角度（度、感度 1.0 のとき）
+    // マウス 1px あたりの視点の角度（度、感度 1.0 のとき）
     private const float LookDegPerPx = 0.15f;
     // 上下の視点の上限（度）
     private const float MaxPitch = 85f;
-    // スティックを最大まで倒したときの回転速度（度/秒、感度 1.0 のとき）
+    // パッドのスティックを最大まで倒したときの回転速度（度/秒、感度 1.0 のとき）
     private const float StickPitchSpeed = 90f;
     private const float StickYawSpeed = 120f;
     // OSC 送信とドライバー更新の間隔（ミリ秒）。マウスに追従させるため短めにする
@@ -69,7 +64,6 @@ public sealed class InputBridge : IDisposable
     private uint _hookThreadId;
     private volatile bool _enabled;
     private volatile bool _disposed;
-    private volatile bool _looking;
     private volatile bool _middleDown;
     private volatile bool _leftDown;
     private volatile bool _mouseLook;
@@ -149,22 +143,13 @@ public sealed class InputBridge : IDisposable
     /// <summary>VRCDeskDive のメインウィンドウ。前面にあるときも VRChat と同じく操作を受け付ける。</summary>
     public IntPtr OwnWindow { get; set; }
 
-    /// <summary>切り替えキーの設定中など、メインウィンドウでキーをそのまま使いたいときに true にする。</summary>
-    public bool SuspendOwnWindowInput
-    {
-        get => _suspendOwnWindowInput;
-        set => _suspendOwnWindowInput = value;
-    }
-
-    private volatile bool _suspendOwnWindowInput;
-
     private bool IsOwnWindowForeground =>
-        OwnWindow != IntPtr.Zero && !_suspendOwnWindowInput && Native.GetForegroundWindow() == OwnWindow;
+        OwnWindow != IntPtr.Zero && Native.GetForegroundWindow() == OwnWindow;
 
     /// <summary>キー入力を VRChat の操作として扱う対象（VRChat かメインウィンドウ）が前面にあるか。</summary>
     private bool IsInputTargetForeground => _vrc.IsForegroundNow || IsOwnWindowForeground;
 
-    private bool IsActive => _enabled && (IsInputTargetForeground || !_settings.OnlyWhenVrcFocused);
+    private bool IsActive => _enabled && IsInputTargetForeground;
 
     /// <summary>
     /// 入力フックは専用スレッドで動かす。UI スレッドで動かすと、画面の処理が一瞬詰まっただけで
@@ -237,21 +222,20 @@ public sealed class InputBridge : IDisposable
     {
         // 前面が VRChat かメインウィンドウなら、キーはそちらに渡さず OSC だけに使う
         // （メインウィンドウに渡すと Space でボタンが押されるなどしてしまう）
-        var foreground = IsInputTargetForeground;
         if (isDown)
         {
             if (!IsActive || IsModifierHeld()) return false;
             bool first;
             lock (_lock) first = _down.Add(vk);
             if (first) OnPress(vk);
-            return foreground;
+            return true;
         }
 
         bool wasDown;
         lock (_lock) wasDown = _down.Remove(vk);
         if (!wasDown) return false;
         OnRelease(vk);
-        return foreground;
+        return IsInputTargetForeground;
     }
 
     /// <summary>マウスルックを解除するキーとして選べるもの（設定の値 → 仮想キー）。</summary>
@@ -314,7 +298,7 @@ public sealed class InputBridge : IDisposable
                         DebugLog.Write($"left down: vrcForeground={foreground} vrcClientUnderCursor={atVrc} mouseLook={_mouseLook} vrcPids={_vrc.DescribePids()}");
                         // VRChat の画面の中をクリックしたときだけ（ほかのウィンドウやタイトルバーは除く）
                         if (!atVrc) break;
-                        if (!_mouseLook && !_looking) _anchor = info.pt;
+                        if (!_mouseLook) _anchor = info.pt;
                         _mouseLookSince = Environment.TickCount64;
                         SetMouseLook(true, foreground ? "click on foreground VRChat" : "click activating VRChat");
                         // まだ前面でなければ、このクリックは VRChat を前面にするためにそのまま渡す
@@ -325,19 +309,12 @@ public sealed class InputBridge : IDisposable
                     case Native.WM_LBUTTONUP when _leftDown:
                         _leftDown = false;
                         return 1;
-                    // 右ドラッグ中はカーソルを止めて、移動量だけを視点の操作に使う
-                    case Native.WM_RBUTTONDOWN when _vrc.IsForegroundNow:
-                        if (!_mouseLook) _anchor = info.pt;
-                        _looking = true;
-                        return 1;
-                    case Native.WM_RBUTTONUP when _looking:
-                        _looking = false;
-                        return 1;
-                    case Native.WM_MOUSEMOVE when _looking || _mouseLook:
+                    // マウスルック中はカーソルを止めて、移動量だけを視点の操作に使う
+                    case Native.WM_MOUSEMOVE when _mouseLook:
                         Interlocked.Add(ref _accumDx, info.pt.X - _anchor.X);
                         Interlocked.Add(ref _accumDy, info.pt.Y - _anchor.Y);
                         return 1;
-                    // ホイールクリックで上下の視点を正面に戻す
+                    // ホイールクリックで上下の視点を水平に戻す
                     case Native.WM_MBUTTONDOWN when _vrc.IsForegroundNow:
                         _middleDown = true;
                         _resetPitch = true;
@@ -369,7 +346,6 @@ public sealed class InputBridge : IDisposable
     {
         DebugLog.Write($"release all ({reason})");
         lock (_lock) _down.Clear();
-        _looking = false;
         _middleDown = false;
         _leftDown = false;
         SetMouseLook(false, reason);
@@ -382,7 +358,7 @@ public sealed class InputBridge : IDisposable
 
     private void Loop()
     {
-        float lastVertical = 0, lastHorizontal = 0, lastLook = 0, mouse = 0, pitch = 0, yaw = 0;
+        float lastVertical = 0, lastHorizontal = 0, pitch = 0, yaw = 0;
         var wasActive = false;
         long inactiveSince = 0, vrcLostSince = 0;
         var clock = Stopwatch.StartNew();
@@ -426,8 +402,7 @@ public sealed class InputBridge : IDisposable
                     SetMouseLook(false, $"VRChat lost focus, foreground=0x{Native.GetForegroundWindow():X}");
             }
 
-            // 左右もドライバーで回せるなら、マウスの移動量をそのまま角度にする（デスクトップ版と同じ感覚）
-            var driverYaw = _settings.UseDriverYaw && Driver.IsConnected;
+            // 視点はドライバーが HMD の姿勢に反映する。マウスの移動量がそのまま角度になる（デスクトップ版と同じ感覚）
             var dx = Interlocked.Exchange(ref _accumDx, 0);
             var dy = Interlocked.Exchange(ref _accumDy, 0);
             if (_enabled)
@@ -437,19 +412,13 @@ public sealed class InputBridge : IDisposable
                     _resetPitch = false;
                     pitch = 0;
                 }
+                var sensitivity = (float)_settings.MouseSensitivity;
                 // スティックは傾けている間、一定の速さで回し続ける
+                var yawDelta = (active ? dx * LookDegPerPx : 0f) + stickX * StickYawSpeed * dt;
                 var pitchDelta = (active ? dy * LookDegPerPx : 0f) + stickY * StickPitchSpeed * dt;
-                if (pitchDelta != 0)
-                {
-                    var sign = _settings.InvertPitch ? 1f : -1f;
-                    pitch = Math.Clamp(pitch + sign * pitchDelta * (float)_settings.PitchSensitivity,
-                        -MaxPitch, MaxPitch);
-                }
-                if (driverYaw)
-                {
-                    var yawDelta = (active ? dx * LookDegPerPx : 0f) + stickX * StickYawSpeed * dt;
-                    yaw = NormalizeAngle(yaw + yawDelta * (float)_settings.MouseSensitivity);
-                }
+                yaw = NormalizeAngle(yaw + yawDelta * sensitivity);
+                // 画面の Y は下が正なので、上下角（上が正）には逆向きに足す
+                pitch = Math.Clamp(pitch - pitchDelta * sensitivity, -MaxPitch, MaxPitch);
             }
             else
             {
@@ -458,30 +427,22 @@ public sealed class InputBridge : IDisposable
                 yaw = 0;
                 _resetPitch = false;
             }
-            Driver.Update(_enabled, yaw, pitch, _settings.LockViewPosition);
+            // 切り替えた時の頭の位置は常に保つ（HMD を机に置いても視点の高さが変わらない）
+            Driver.Update(_enabled, yaw, pitch, lockPosition: true);
 
-            float vertical = 0, horizontal = 0, turn = 0;
+            float vertical = 0, horizontal = 0;
             if (active)
             {
                 lock (_lock)
                 {
                     vertical = Axis(VK_W, VK_S);
                     horizontal = Axis(VK_D, VK_A);
-                    turn = Axis(VK_E, VK_Q);
                 }
             }
-
-            // ドライバーで回さないときは、マウスとスティックを VRChat の旋回（OSC）に使う
-            var oscMouse = active && !driverYaw ? dx / dt * OscTurnPerPxPerSec * (float)_settings.MouseSensitivity : 0f;
-            mouse += (oscMouse - mouse) * (1f - MathF.Exp(-dt / OscTurnSmoothing));
-            var oscStick = _enabled && !driverYaw ? stickX : 0f;
-            var look = Math.Clamp(mouse + turn * (float)_settings.KeyTurnSpeed + oscStick, -1f, 1f);
-            if (Math.Abs(look) < 0.01f) look = 0;
 
             while (_events.TryDequeue(out var e)) _osc.Send(e.Address, e.Value);
             if (vertical != lastVertical) _osc.Send("/input/Vertical", lastVertical = vertical);
             if (horizontal != lastHorizontal) _osc.Send("/input/Horizontal", lastHorizontal = horizontal);
-            if (look != lastLook) _osc.Send("/input/LookHorizontal", lastLook = look);
 
             DebugLog.Flush();
             Thread.Sleep(LoopIntervalMs);
@@ -518,7 +479,6 @@ public sealed class InputBridge : IDisposable
         _loop.Join(2000);
         _osc.Send("/input/Vertical", 0f);
         _osc.Send("/input/Horizontal", 0f);
-        _osc.Send("/input/LookHorizontal", 0f);
         _osc.Send("/input/Run", 0);
         _osc.Send("/input/Jump", 0);
         _osc.Send("/input/Voice", 0);

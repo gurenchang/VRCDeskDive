@@ -46,8 +46,7 @@
                     <Ellipse x:Name="CompactVrcDot" Width="8" Height="8" Fill="Gray" Margin="0,0,5,0"/>
                     <TextBlock Text="VRChat" Foreground="{StaticResource SubTextBrush}" Margin="0,0,14,0"/>
                     <Ellipse x:Name="CompactDriverDot" Width="8" Height="8" Fill="Gray" Margin="0,0,5,0"/>
-                    <TextBlock Text="ドライバー" Foreground="{StaticResource SubTextBrush}" Margin="0,0,14,0"/>
-                    <TextBlock x:Name="CompactHotkeyText" Foreground="{StaticResource SubTextBrush}"/>
+                    <TextBlock Text="ドライバー" Foreground="{StaticResource SubTextBrush}"/>
                 </StackPanel>
 
                 <Grid x:Name="StatusGrid" Margin="0,12,0,0">
@@ -60,45 +59,32 @@
                         <RowDefinition/>
                         <RowDefinition/>
                         <RowDefinition/>
-                        <RowDefinition/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Text="切り替えキー" Style="{StaticResource Label}"/>
-                    <TextBox x:Name="HotkeyBox" Grid.Column="1" IsReadOnly="True" Cursor="Hand" Width="180"
-                             HorizontalAlignment="Left" Padding="8,4" Margin="0,3"
-                             Background="{StaticResource CardBrush}" Foreground="{StaticResource TextBrush}"
-                             BorderBrush="{StaticResource BorderBrush}" CaretBrush="Transparent"
-                             ToolTip="クリックしてから新しいキーの組み合わせを押してください"
-                             GotKeyboardFocus="HotkeyBox_GotKeyboardFocus"
-                             LostKeyboardFocus="HotkeyBox_LostKeyboardFocus"
-                             PreviewKeyDown="HotkeyBox_PreviewKeyDown"/>
-
-                    <TextBlock Grid.Row="1" Text="VRChat" Style="{StaticResource Label}"/>
-                    <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="VRChat" Style="{StaticResource Label}"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                         <Ellipse x:Name="VrcDot" Width="9" Height="9" Fill="Gray" Margin="0,0,7,0"/>
                         <TextBlock x:Name="VrcText" Text="未検出"/>
                     </StackPanel>
 
-                    <TextBlock Grid.Row="2" Text="SteamVR" Style="{StaticResource Label}"/>
-                    <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Grid.Row="1" Text="SteamVR" Style="{StaticResource Label}"/>
+                    <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                         <Ellipse x:Name="SteamVrDot" Width="9" Height="9" Fill="Gray" Margin="0,0,7,0"/>
                         <TextBlock x:Name="SteamVrText" Text="未起動"/>
                     </StackPanel>
 
-                    <TextBlock Grid.Row="3" Text="ドライバー" Style="{StaticResource Label}"/>
-                    <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Grid.Row="2" Text="ドライバー" Style="{StaticResource Label}"/>
+                    <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                         <Ellipse x:Name="DriverDot" Width="9" Height="9" Fill="Gray" Margin="0,0,7,0"/>
                         <TextBlock x:Name="DriverText" Text="未接続"/>
                         <Button x:Name="RegisterButton" Content="SteamVRに登録" Margin="10,0,0,0" Padding="8,2"
                                 Cursor="Hand" Visibility="Collapsed" Click="RegisterButton_Click"/>
                     </StackPanel>
 
-                    <TextBlock Grid.Row="4" Text="OSC送信先" Style="{StaticResource Label}"/>
-                    <TextBlock x:Name="OscText" Grid.Row="4" Grid.Column="1" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Row="3" Text="OSC送信先" Style="{StaticResource Label}"/>
+                    <TextBlock x:Name="OscText" Grid.Row="3" Grid.Column="1" VerticalAlignment="Center"/>
                 </Grid>
                 <TextBlock x:Name="DriverHint" Foreground="{StaticResource SubTextBrush}" TextWrapping="Wrap"
-                           Visibility="Collapsed" Margin="0,4,0,0"/>
-                <TextBlock x:Name="HotkeyError" Foreground="{StaticResource ErrorBrush}" TextWrapping="Wrap"
                            Visibility="Collapsed" Margin="0,4,0,0"/>
             </StackPanel>
 
@@ -111,42 +97,19 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="36"/>
                     </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition/>
-                        <RowDefinition/>
-                        <RowDefinition/>
-                    </Grid.RowDefinitions>
-                    <TextBlock Text="左右の感度" Style="{StaticResource Label}"/>
+                    <TextBlock Text="マウス感度" Style="{StaticResource Label}"/>
                     <Slider x:Name="SensitivitySlider" Grid.Column="1" Minimum="0.2" Maximum="3" VerticalAlignment="Center"
                             ValueChanged="SensitivitySlider_ValueChanged"/>
                     <TextBlock x:Name="SensitivityText" Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right"/>
-
-                    <TextBlock Grid.Row="1" Text="上下の感度" Style="{StaticResource Label}"/>
-                    <Slider x:Name="PitchSlider" Grid.Row="1" Grid.Column="1" Minimum="0.2" Maximum="3" VerticalAlignment="Center"
-                            ValueChanged="PitchSlider_ValueChanged"/>
-                    <TextBlock x:Name="PitchText" Grid.Row="1" Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right"/>
-
-                    <TextBlock Grid.Row="2" Text="Q/E 旋回速度" Style="{StaticResource Label}"/>
-                    <Slider x:Name="TurnSlider" Grid.Row="2" Grid.Column="1" Minimum="0.1" Maximum="1" VerticalAlignment="Center"
-                            ValueChanged="TurnSlider_ValueChanged"/>
-                    <TextBlock x:Name="TurnText" Grid.Row="2" Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right"/>
                 </Grid>
-                <CheckBox x:Name="InvertPitchCheck" Content="上下の視点を反転する" Margin="0,8,0,4"
-                          Checked="InvertPitchCheck_Changed" Unchecked="InvertPitchCheck_Changed"/>
-                <CheckBox x:Name="LockPositionCheck" Content="切り替えた時の視点の位置を保つ（机に置いても高さが変わらない）"
-                          Checked="LockPositionCheck_Changed" Unchecked="LockPositionCheck_Changed"/>
-                <CheckBox x:Name="DriverYawCheck" Content="左右もドライバーで回す（デスクトップ版のような視点操作）"
-                          ToolTip="オフにすると、左右はVRChatの旋回（OSC）で回します。ドライバー未接続のときも旋回になります"
-                          Checked="DriverYawCheck_Changed" Unchecked="DriverYawCheck_Changed"/>
-                <StackPanel Orientation="Horizontal">
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,4">
                     <CheckBox x:Name="ClickLookCheck" Content="VRChatを左クリックでマウスルック　解除キー"
                               VerticalAlignment="Center"
                               Checked="ClickLookCheck_Changed" Unchecked="ClickLookCheck_Changed"/>
                     <ComboBox x:Name="ReleaseKeyCombo" Width="70" Margin="6,0,0,0" VerticalAlignment="Center"
                               ToolTip="マウスルックを解除するキー（解除したあとも、そのキーはVRChatにそのまま届きます）"
                               SelectionChanged="ReleaseKeyCombo_SelectionChanged"/>
-                </StackPanel>                <CheckBox x:Name="FocusOnlyCheck" Content="VRChatかこのウィンドウが前面のときだけ操作する（推奨）"
-                          Checked="FocusOnlyCheck_Changed" Unchecked="FocusOnlyCheck_Changed"/>
+                </StackPanel>
                 <CheckBox x:Name="SoundCheck" Content="切り替え時に音を鳴らす"
                           Checked="SoundCheck_Changed" Unchecked="SoundCheck_Changed"/>
 
@@ -160,20 +123,16 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/>
+                        <RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/>
                     </Grid.RowDefinitions>
-                    <Border Grid.Row="4" Style="{StaticResource KeyCap}"><TextBlock Text="左クリック"/></Border>
-                    <TextBlock Grid.Row="4" Grid.Column="1" Text="マウスルック" VerticalAlignment="Center"/>
-                    <Border Grid.Row="4" Grid.Column="2" Style="{StaticResource KeyCap}"><TextBlock x:Name="ReleaseKeyCap" Text="Alt"/></Border>
-                    <TextBlock Grid.Row="4" Grid.Column="3" Text="マウスルック解除" VerticalAlignment="Center"/>
                     <Border Grid.Row="0" Style="{StaticResource KeyCap}"><TextBlock Text="W A S D"/></Border>
                     <TextBlock Grid.Row="0" Grid.Column="1" Text="移動" VerticalAlignment="Center"/>
-                    <Border Grid.Row="1" Style="{StaticResource KeyCap}"><TextBlock Text="右ドラッグ"/></Border>
-                    <TextBlock Grid.Row="1" Grid.Column="1" Text="視点を動かす" VerticalAlignment="Center"/>
-                    <Border Grid.Row="2" Style="{StaticResource KeyCap}"><TextBlock Text="ホイール押し"/></Border>
-                    <TextBlock Grid.Row="2" Grid.Column="1" Text="水平に戻す" VerticalAlignment="Center"/>
-                    <Border Grid.Row="3" Style="{StaticResource KeyCap}"><TextBlock Text="Q / E"/></Border>
-                    <TextBlock Grid.Row="3" Grid.Column="1" Text="左右に旋回" VerticalAlignment="Center"/>
+                    <Border Grid.Row="1" Style="{StaticResource KeyCap}"><TextBlock Text="左クリック"/></Border>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="マウスルック" VerticalAlignment="Center"/>
+                    <Border Grid.Row="2" Style="{StaticResource KeyCap}"><TextBlock x:Name="ReleaseKeyCap" Text="Alt"/></Border>
+                    <TextBlock Grid.Row="2" Grid.Column="1" Text="マウスルック解除" VerticalAlignment="Center"/>
+                    <Border Grid.Row="3" Style="{StaticResource KeyCap}"><TextBlock Text="ホイール押し"/></Border>
+                    <TextBlock Grid.Row="3" Grid.Column="1" Text="水平に戻す" VerticalAlignment="Center"/>
 
                     <Border Grid.Row="0" Grid.Column="2" Style="{StaticResource KeyCap}"><TextBlock Text="Shift"/></Border>
                     <TextBlock Grid.Row="0" Grid.Column="3" Text="走る" VerticalAlignment="Center"/>
@@ -191,9 +150,7 @@
                         <LineBreak/>
                         <Run Text="・VRChatのアクションメニュー → オプション → OSC を有効にする"/>
                         <LineBreak/>
-                        <Run Text="・スムーズに回すなら、VRChatの快適ターンをオフにする"/>
-                        <LineBreak/>
-                        <Run Text="・上下の視点と水平の固定には、ドライバーをSteamVRに登録してSteamVRを再起動する"/>
+                        <Run Text="・視点の操作と水平の固定には、ドライバーをSteamVRに登録してSteamVRを再起動する"/>
                     </TextBlock>
                 </Border>
             </StackPanel>

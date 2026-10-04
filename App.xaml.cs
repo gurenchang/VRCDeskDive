@@ -9,8 +9,6 @@ public partial class App : Application
 {
     private Mutex? _mutex;
     private AppController? _controller;
-    private HotkeyService? _hotkey;
-    private TrayIcon? _tray;
     private MainWindow? _main;
     private ChatWindow? _chat;
 
@@ -21,34 +19,19 @@ public partial class App : Application
         _mutex = new Mutex(true, "VRCDeskDive.SingleInstance", out var created);
         if (!created)
         {
-            MessageBox.Show("VRCDeskDive はすでに起動しています。タスクトレイを確認してください。", "VRCDeskDive");
+            MessageBox.Show("VRCDeskDive はすでに起動しています。", "VRCDeskDive");
             Shutdown();
             return;
         }
 
         _controller = new AppController();
         _main = new MainWindow(_controller);
-
-        var hwnd = new WindowInteropHelper(_main).EnsureHandle();
-        _controller.Input.OwnWindow = hwnd;
-        _hotkey = new HotkeyService(hwnd);
-        _hotkey.Pressed += _controller.Toggle;
-        _main.AttachHotkey(_hotkey);
-
-        _tray = new TrayIcon(_controller, ShowMain, ExitApp);
-        _main.HiddenToTray += () => _tray.ShowBalloon("タスクトレイで動作中です。終了はトレイアイコンの右クリックから。");
-
+        _controller.Input.OwnWindow = new WindowInteropHelper(_main).EnsureHandle();
         _controller.Input.ChatRequested += () => Dispatcher.BeginInvoke(OpenChat);
 
+        // メインウィンドウを閉じたらアプリを終了する
+        _main.Closed += (_, _) => ExitApp();
         _main.Show();
-    }
-
-    private void ShowMain()
-    {
-        if (_main is null) return;
-        _main.Show();
-        if (_main.WindowState == WindowState.Minimized) _main.WindowState = WindowState.Normal;
-        _main.Activate();
     }
 
     private void OpenChat()
@@ -66,14 +49,7 @@ public partial class App : Application
 
     private void ExitApp()
     {
-        if (_main is not null)
-        {
-            _main.AllowClose = true;
-            _main.Close();
-        }
         _chat?.Close();
-        _tray?.Dispose();
-        _hotkey?.Dispose();
         _controller?.Dispose();
         _mutex?.ReleaseMutex();
         Shutdown();

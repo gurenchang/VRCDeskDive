@@ -6,7 +6,6 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <UseWindowsForms>true</UseWindowsForms>
     <AssemblyName>VRCDeskDive</AssemblyName>
     <RootNamespace>VRCDeskDive</RootNamespace>
     <Version>0.1.0</Version>
