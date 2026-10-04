@@ -10,11 +10,14 @@
     <AssemblyName>VRCDeskDive</AssemblyName>
     <RootNamespace>VRCDeskDive</RootNamespace>
     <Version>0.1.0</Version>
+    <!-- zig 本体とドライバーのソースはプロジェクトの項目に含めない -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);tools\**;driver\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Valve OpenVR SDK (BSD-3-Clause) -->
-    <None Include="ThirdParty\OpenVR\openvr_api.dll" Link="openvr_api.dll" CopyToOutputDirectory="PreserveNewest" />
+    <!-- driver\build.ps1 でビルドした SteamVR ドライバーを出力先の driver\vrcdeskdive\ に置く -->
+    <None Include="driver\out\vrcdeskdive\**\*" Link="driver\vrcdeskdive\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <!-- ドライバーの構造体定義は Valve OpenVR SDK (BSD-3-Clause) に基づく -->
     <None Include="ThirdParty\OpenVR\LICENSE" Link="licenses\OpenVR-LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

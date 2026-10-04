@@ -11,6 +11,7 @@ public sealed class AppSettings
     public double KeyTurnSpeed { get; set; } = 0.6;
     public double PitchSensitivity { get; set; } = 1.0;
     public bool InvertPitch { get; set; }
+    public bool LockViewPosition { get; set; } = true;
     public bool OnlyWhenVrcFocused { get; set; } = true;
     public bool PlaySound { get; set; } = true;
     public string OscHost { get; set; } = "127.0.0.1";

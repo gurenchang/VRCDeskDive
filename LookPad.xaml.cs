@@ -20,6 +20,17 @@ public partial class LookPad : UserControl
     /// <summary>スティックの傾き (x: 右が正, y: 下が正)。離すと (0, 0)。</summary>
     public event Action<float, float>? StickChanged;
 
+    /// <summary>パッド上で中クリック（ホイール押し）したとき。</summary>
+    public event Action? ResetRequested;
+
+    protected override void OnMouseDown(MouseButtonEventArgs e)
+    {
+        base.OnMouseDown(e);
+        if (e.ChangedButton != MouseButton.Middle) return;
+        e.Handled = true;
+        ResetRequested?.Invoke();
+    }
+
     public LookPad()
     {
         InitializeComponent();
@@ -61,7 +72,19 @@ public partial class LookPad : UserControl
 
         var x = offset.X / Radius;
         var y = offset.Y / Radius;
-        if (Math.Sqrt(x * x + y * y) < DeadZone) x = y = 0;
+        var length = Math.Sqrt(x * x + y * y);
+        if (length < DeadZone)
+        {
+            x = y = 0;
+        }
+        else
+        {
+            // 円の範囲を正方形に引き伸ばし、斜めに倒しても両方向とも最大まで届くようにする
+            // （例: 45° に最大まで倒すと (0.71, 0.71) ではなく (1, 1)）
+            var scale = length / Math.Max(Math.Abs(x), Math.Abs(y));
+            x *= scale;
+            y *= scale;
+        }
         StickChanged?.Invoke((float)x, (float)y);
     }
 

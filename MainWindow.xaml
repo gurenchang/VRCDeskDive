@@ -43,6 +43,7 @@
                         <RowDefinition/>
                         <RowDefinition/>
                         <RowDefinition/>
+                        <RowDefinition/>
                     </Grid.RowDefinitions>
 
                     <TextBlock Text="切り替えキー" Style="{StaticResource Label}"/>
@@ -61,15 +62,25 @@
                         <TextBlock x:Name="VrcText" Text="未検出"/>
                     </StackPanel>
 
-                    <TextBlock Grid.Row="2" Text="上下視点" Style="{StaticResource Label}"/>
+                    <TextBlock Grid.Row="2" Text="SteamVR" Style="{StaticResource Label}"/>
                     <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Ellipse x:Name="TiltDot" Width="9" Height="9" Fill="Gray" Margin="0,0,7,0"/>
-                        <TextBlock x:Name="TiltText"/>
+                        <Ellipse x:Name="SteamVrDot" Width="9" Height="9" Fill="Gray" Margin="0,0,7,0"/>
+                        <TextBlock x:Name="SteamVrText" Text="未起動"/>
                     </StackPanel>
 
-                    <TextBlock Grid.Row="3" Text="OSC送信先" Style="{StaticResource Label}"/>
-                    <TextBlock x:Name="OscText" Grid.Row="3" Grid.Column="1" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Row="3" Text="ドライバー" Style="{StaticResource Label}"/>
+                    <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Ellipse x:Name="DriverDot" Width="9" Height="9" Fill="Gray" Margin="0,0,7,0"/>
+                        <TextBlock x:Name="DriverText" Text="未接続"/>
+                        <Button x:Name="RegisterButton" Content="SteamVRに登録" Margin="10,0,0,0" Padding="8,2"
+                                Cursor="Hand" Visibility="Collapsed" Click="RegisterButton_Click"/>
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="4" Text="OSC送信先" Style="{StaticResource Label}"/>
+                    <TextBlock x:Name="OscText" Grid.Row="4" Grid.Column="1" VerticalAlignment="Center"/>
                 </Grid>
+                <TextBlock x:Name="DriverHint" Foreground="{StaticResource SubTextBrush}" TextWrapping="Wrap"
+                           Visibility="Collapsed" Margin="0,4,0,0"/>
                 <TextBlock x:Name="HotkeyError" Foreground="{StaticResource ErrorBrush}" TextWrapping="Wrap"
                            Visibility="Collapsed" Margin="0,4,0,0"/>
             </StackPanel>
@@ -105,6 +116,8 @@
                 </Grid>
                 <CheckBox x:Name="InvertPitchCheck" Content="上下の視点を反転する" Margin="0,8,0,4"
                           Checked="InvertPitchCheck_Changed" Unchecked="InvertPitchCheck_Changed"/>
+                <CheckBox x:Name="LockPositionCheck" Content="切り替えた時の視点の位置を保つ（HMDを机に置いても高さが変わらない）"
+                          Checked="LockPositionCheck_Changed" Unchecked="LockPositionCheck_Changed"/>
                 <CheckBox x:Name="FocusOnlyCheck" Content="VRChatが前面にあるときだけ操作する（推奨）"
                           Checked="FocusOnlyCheck_Changed" Unchecked="FocusOnlyCheck_Changed"/>
                 <CheckBox x:Name="SoundCheck" Content="切り替え時に音を鳴らす"
@@ -127,7 +140,7 @@
                     <Border Grid.Row="1" Style="{StaticResource KeyCap}"><TextBlock Text="右ドラッグ"/></Border>
                     <TextBlock Grid.Row="1" Grid.Column="1" Text="視点を動かす" VerticalAlignment="Center"/>
                     <Border Grid.Row="2" Style="{StaticResource KeyCap}"><TextBlock Text="ホイール押し"/></Border>
-                    <TextBlock Grid.Row="2" Grid.Column="1" Text="上下を正面に" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Row="2" Grid.Column="1" Text="水平に戻す" VerticalAlignment="Center"/>
                     <Border Grid.Row="3" Style="{StaticResource KeyCap}"><TextBlock Text="Q / E"/></Border>
                     <TextBlock Grid.Row="3" Grid.Column="1" Text="左右に旋回" VerticalAlignment="Center"/>
 
@@ -149,7 +162,7 @@
                         <LineBreak/>
                         <Run Text="・スムーズに回すなら、VRChatの快適ターンをオフにする"/>
                         <LineBreak/>
-                        <Run Text="・上下の視点はSteamVRのプレイスペースを傾けて動かします（VR操作に戻すと元どおり）"/>
+                        <Run Text="・上下の視点と水平の固定には、ドライバーをSteamVRに登録してSteamVRを再起動する"/>
                     </TextBlock>
                 </Border>
             </StackPanel>

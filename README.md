@@ -16,10 +16,17 @@ HMD を外すとスリープしてしまう場合は、近接センサーをテ�
 
 ## ビルドと起動
 
+SteamVR ドライバー（C）を先にビルドしてから、アプリをビルドします。
+ドライバーのビルドには Visual Studio Build Tools か [zig](https://ziglang.org/)（`tools\zig\` に置けば自動で使われます）が必要です。
+
 ```
+powershell -ExecutionPolicy Bypass -File driver\build.ps1
 dotnet build -c Release
 bin\Release\net10.0-windows\VRCDeskDive.exe
 ```
+
+初回は画面の「SteamVRに登録」を押してから SteamVR を再起動してください。
+ドライバーは HMD の姿勢だけを書き換え、デスクトップ操作中は視点を水平に保ちます（VR 操作に戻すと本来の姿勢に戻ります）。
 
 ## 使い方
 
@@ -33,7 +40,7 @@ bin\Release\net10.0-windows\VRCDeskDive.exe
 | W A S D | 移動 |
 | 右ドラッグ（VRChat 上） | 視点を上下左右に動かす |
 | 右クリック＋ドラッグ（ツールのパッド上） | スティックのように視点を回す |
-| ホイールクリック | 上下の視点を正面に戻す |
+| ホイールクリック | 視点を水平に戻す |
 | Q / E | 左右に旋回 |
 | Shift | 走る |
 | Space | ジャンプ |
@@ -42,10 +49,8 @@ bin\Release\net10.0-windows\VRCDeskDive.exe
 
 ## 注意
 
-- 上下の視点は SteamVR のプレイスペース（Live 設定）を傾けて動かします。
-  VR 操作に戻す・SteamVR が終了する・次回起動時のいずれかで元に戻します
-  （退避ファイル: `%APPDATA%\VRCDeskDive\playspace_backup.json`）。
-- OVR Advanced Settings などプレイスペースを操作する他のツールと同時に使うと競合することがあります。
+- 上下の視点と水平の固定は SteamVR ドライバーで行います。プレイスペースには触れません。
+- アプリが落ちた場合も、ドライバーは 1.5 秒で姿勢の書き換えをやめます。
 - VRChat 本体の改造は行っていません。
 
 ## サードパーティ

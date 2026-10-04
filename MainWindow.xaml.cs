@@ -30,6 +30,7 @@ public partial class MainWindow : Window
         TurnSlider.Value = s.KeyTurnSpeed;
         PitchSlider.Value = s.PitchSensitivity;
         InvertPitchCheck.IsChecked = s.InvertPitch;
+        LockPositionCheck.IsChecked = s.LockViewPosition;
         FocusOnlyCheck.IsChecked = s.OnlyWhenVrcFocused;
         SoundCheck.IsChecked = s.PlaySound;
         OscText.Text = controller.Osc.Target;
@@ -38,11 +39,13 @@ public partial class MainWindow : Window
         _initialized = true;
 
         LookPad.StickChanged += controller.Input.SetStick;
+        LookPad.ResetRequested += controller.Input.ResetPitch;
         controller.ModeChanged += UpdateMode;
         controller.Vrc.Changed += () => Dispatcher.BeginInvoke(UpdateVrcStatus);
-        controller.Input.Tilt.StateChanged += () => Dispatcher.BeginInvoke(UpdateTiltStatus);
+        controller.Input.Driver.StatusChanged += () => Dispatcher.BeginInvoke(UpdateDriverStatus);
         UpdateMode();
         UpdateVrcStatus();
+        UpdateDriverStatus();
     }
 
     public void AttachHotkey(HotkeyService hotkey)
@@ -66,18 +69,48 @@ public partial class MainWindow : Window
         ToggleButton.Background = (Brush)FindResource(desktop ? "VrBrush" : "DesktopBrush");
         Title = desktop ? "VRCDeskDive - デスクトップ操作中" : "VRCDeskDive";
         LookPad.IsEnabled = desktop;
-        UpdateTiltStatus();
     }
 
-    private void UpdateTiltStatus()
+    private void UpdateDriverStatus()
     {
-        var desktop = _controller.Mode == ControlMode.Desktop;
-        (TiltText.Text, TiltDot.Fill) = (desktop, _controller.Input.Tilt.State) switch
+        var status = _controller.Input.Driver.Status;
+        var steamVr = status != DriverStatus.SteamVrNotRunning;
+        SteamVrText.Text = steamVr ? "接続" : "未起動";
+        SteamVrDot.Fill = steamVr ? Brushes.LimeGreen : Brushes.Gray;
+
+        (DriverText.Text, DriverDot.Fill) = status switch
         {
-            (true, TiltState.Active) => ("使用可能（SteamVRに接続中）", Brushes.LimeGreen),
-            (true, _) => ("SteamVRに接続できません（再試行中）", (Brush)Brushes.Gold),
-            _ => ("デスクトップ操作中に有効", (Brush)Brushes.Gray),
+            DriverStatus.Connected => ("接続", Brushes.LimeGreen),
+            DriverStatus.WaitingForHmd => ("接続（HMDの姿勢待ち）", (Brush)Brushes.Gold),
+            DriverStatus.HookFailed => ("エラー（HMDの姿勢を取得できません）", (Brush)Brushes.OrangeRed),
+            DriverStatus.NotLoaded => ("未接続", (Brush)Brushes.Gold),
+            _ => ("未接続", (Brush)Brushes.Gray),
         };
+
+        var registered = DriverInstaller.IsRegistered();
+        var showRegister = !registered && DriverInstaller.IsBundled;
+        RegisterButton.Visibility = showRegister ? Visibility.Visible : Visibility.Collapsed;
+
+        string? hint = null;
+        if (!DriverInstaller.IsBundled)
+            hint = "ドライバーがビルドされていません（driver\\build.ps1）。上下の視点と水平固定は使えません。";
+        else if (!registered)
+            hint = "「SteamVRに登録」を押してから、SteamVRを再起動してください。";
+        else if (status == DriverStatus.NotLoaded)
+            hint = "登録済みです。SteamVRを再起動すると読み込まれます。";
+        DriverHint.Text = hint ?? string.Empty;
+        DriverHint.Visibility = hint is null ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void RegisterButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!DriverInstaller.Register())
+        {
+            MessageBox.Show(this, "ドライバーを登録できませんでした。SteamVRがインストールされているか確認してください。", "VRCDeskDive");
+            return;
+        }
+        UpdateDriverStatus();
+        MessageBox.Show(this, "SteamVRにドライバーを登録しました。SteamVRを再起動すると有効になります。", "VRCDeskDive");
     }
 
     private void UpdateVrcStatus()
@@ -183,6 +216,11 @@ public partial class MainWindow : Window
     private void InvertPitchCheck_Changed(object sender, RoutedEventArgs e)
     {
         if (_initialized) _controller.Settings.InvertPitch = InvertPitchCheck.IsChecked == true;
+    }
+
+    private void LockPositionCheck_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_initialized) _controller.Settings.LockViewPosition = LockPositionCheck.IsChecked == true;
     }
 
     private void FocusOnlyCheck_Changed(object sender, RoutedEventArgs e)

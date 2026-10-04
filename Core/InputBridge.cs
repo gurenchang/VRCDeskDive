@@ -36,7 +36,8 @@ public sealed class InputBridge : IDisposable
     private const float MouseScale = 0.02f;
     // マウス 1px あたりの上下角（度、感度 1.0 のとき）
     private const float PitchScale = 0.15f;
-    private const int TiltRetryMs = 3000;
+    // 上下の視点の上限（度）
+    private const float MaxPitch = 85f;
     // スティックを最大まで倒したときの上下の回転速度（度/秒、感度 1.0 のとき）
     private const float StickPitchSpeed = 90f;
 
@@ -63,8 +64,8 @@ public sealed class InputBridge : IDisposable
     private volatile float _stickX;
     private volatile float _stickY;
 
-    /// <summary>上下視点用のプレイスペース操作。OSC スレッドからのみ触る。</summary>
-    public PlayspaceTilt Tilt { get; } = new();
+    /// <summary>HMD の姿勢を固定・回転させる SteamVR ドライバーとの接続。OSC スレッドからのみ更新する。</summary>
+    public DriverLink Driver { get; } = new();
 
     /// <summary>Enter が押されたとき（チャットボックス入力を開く）。フックスレッドから呼ばれる。</summary>
     public event Action? ChatRequested;
@@ -109,6 +110,9 @@ public sealed class InputBridge : IDisposable
         _stickX = x;
         _stickY = y;
     }
+
+    /// <summary>上下の視点を水平に戻す（ホイール押し・パッドの中クリック）。</summary>
+    public void ResetPitch() => _resetPitch = true;
 
     private bool IsActive => _enabled && (_vrc.IsForeground || !_settings.OnlyWhenVrcFocused);
 
@@ -240,27 +244,23 @@ public sealed class InputBridge : IDisposable
     private void Loop()
     {
         float lastVertical = 0, lastHorizontal = 0, lastLook = 0, mouse = 0, pitch = 0;
-        long nextTiltAttempt = 0;
         var wasActive = false;
         var clock = Stopwatch.StartNew();
-
-        Tilt.RecoverIfNeeded();
 
         while (!_disposed)
         {
             var dt = (float)clock.Elapsed.TotalSeconds;
             clock.Restart();
+            var (stickX, stickY) = CurveStick(_stickX, _stickY);
 
             var active = IsActive;
             if (wasActive && !active) ReleaseAll();
             wasActive = active;
 
-            // 上下の視点はプレイスペースの回転で表現する
+            // 上下の視点はドライバーが HMD の姿勢に反映する（0 = 水平）
             var dy = Interlocked.Exchange(ref _accumDy, 0);
             if (_enabled)
             {
-                if (!Tilt.IsActive && Environment.TickCount64 >= nextTiltAttempt && !Tilt.Begin())
-                    nextTiltAttempt = Environment.TickCount64 + TiltRetryMs;
                 if (_resetPitch)
                 {
                     _resetPitch = false;
@@ -269,20 +269,20 @@ public sealed class InputBridge : IDisposable
                 var sign = _settings.InvertPitch ? 1f : -1f;
                 var pitchDelta = active ? dy * PitchScale : 0f;
                 // スティックは傾けている間、一定の速さで回し続ける
-                pitchDelta += Curve(_stickY) * StickPitchSpeed * dt;
+                pitchDelta += stickY * StickPitchSpeed * dt;
                 if (pitchDelta != 0)
                 {
                     pitch = Math.Clamp(pitch + sign * pitchDelta * (float)_settings.PitchSensitivity,
-                        -PlayspaceTilt.MaxPitch, PlayspaceTilt.MaxPitch);
+                        -MaxPitch, MaxPitch);
                 }
-                Tilt.Update(pitch);
             }
-            else if (Tilt.IsActive)
+            else
             {
-                Tilt.End();
+                // 次にデスクトップ操作へ切り替えたときは水平から始める
                 pitch = 0;
+                _resetPitch = false;
             }
-            Tilt.PollEvents();
+            Driver.Update(_enabled, pitch, _settings.LockViewPosition);
 
             float vertical = 0, horizontal = 0, turn = 0;
             var dx = Interlocked.Exchange(ref _accumDx, 0);
@@ -302,7 +302,7 @@ public sealed class InputBridge : IDisposable
                 mouse = 0;
             }
 
-            var stick = _enabled ? Curve(_stickX) : 0f;
+            var stick = _enabled ? stickX : 0f;
             var look = Math.Clamp(mouse + turn * (float)_settings.KeyTurnSpeed + stick, -1f, 1f);
             if (Math.Abs(look) < 0.01f) look = 0;
 
@@ -314,11 +314,16 @@ public sealed class InputBridge : IDisposable
             Thread.Sleep(16);
         }
 
-        Tilt.Dispose();
+        Driver.Dispose();
     }
 
     // 中心付近を細かく操作できるよう、傾きを二乗カーブにする
-    private static float Curve(float v) => v * Math.Abs(v);
+    // 縦横別々に二乗すると斜めに倒したときの弱い方向が潰れるので、倒した量全体に掛けて方向を保つ
+    private static (float X, float Y) CurveStick(float x, float y)
+    {
+        var magnitude = Math.Max(Math.Abs(x), Math.Abs(y));
+        return (x * magnitude, y * magnitude);
+    }
 
     private float Axis(int positive, int negative) =>
         (_down.Contains(positive) ? 1f : 0f) - (_down.Contains(negative) ? 1f : 0f);

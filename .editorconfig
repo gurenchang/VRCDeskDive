@@ -1,5 +1,0 @@
-root = true
-
-# Valve の自動生成バインディングは生成コードとして扱う（nullable 解析の対象外）
-[ThirdParty/**.cs]
-generated_code = true
