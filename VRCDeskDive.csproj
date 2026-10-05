@@ -21,6 +21,7 @@
     <Resource Include="Assets\app.ico" />
     <!-- Rajdhani フォント (SIL Open Font License 1.1) -->
     <None Include="Fonts\OFL.txt" Link="licenses\Rajdhani-OFL.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="LICENSE" Link="licenses\VRCDeskDive-LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

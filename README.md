@@ -86,6 +86,10 @@ SteamVR を終了してから、次のコマンドを実行します（パスは
 "C:\Program Files (x86)\Steam\steamapps\common\SteamVR\bin\win64\vrpathreg.exe" removedriver "<ビルド先>\driver\vrcdeskdive"
 ```
 
+## ライセンス
+
+[MIT License](LICENSE)
+
 ## サードパーティ
 
 - [OpenVR SDK](https://github.com/ValveSoftware/openvr)（BSD-3-Clause）: `ThirdParty/OpenVR/`
